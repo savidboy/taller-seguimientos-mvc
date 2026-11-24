@@ -1,0 +1,243 @@
+@model CalendarioViewModel
+@{
+    ViewData["Title"] = "Calendario de eventos";
+    var anterior = new DateTime(Model.Anio, Model.Mes, 1).AddMonths(-1);
+    var siguiente = new DateTime(Model.Anio, Model.Mes, 1).AddMonths(1);
+    var diasSemana = new[] { "Lun", "Mar", "Mie", "Jue", "Vie", "Sab", "Dom" };
+}
+
+<div class="pagetitle">
+    <h1>Calendario de eventos</h1>
+    <nav>
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Inicio</a></li>
+            <li class="breadcrumb-item active">Calendario</li>
+        </ol>
+    </nav>
+</div>
+
+<section class="section">
+
+    @if (Model.Recordatorios.Any())
+    {
+        <div class="alert alert-warning alert-dismissible fade show" role="alert">
+            <h6 class="alert-heading"><i class="bi bi-bell"></i> Recordatorios activos</h6>
+            <ul class="mb-0 small">
+                @foreach (var evento in Model.Recordatorios)
+                {
+                    <li>
+                        <strong>@evento.Titulo</strong> empieza a las @evento.Hora
+                        (@evento.Fecha.ToString("dd/MM/yyyy")).
+                    </li>
+                }
+            </ul>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
+        </div>
+    }
+
+    <div class="row">
+
+        <div class="col-lg-8">
+
+            <div class="card">
+                <div class="card-body pt-3">
+
+                    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+                        <h5 class="card-title m-0 text-capitalize">@Model.NombreMes</h5>
+                        <div class="btn-group btn-group-sm">
+                            <a class="btn btn-outline-secondary"
+                               asp-action="Index" asp-route-mes="@anterior.Month" asp-route-anio="@anterior.Year">
+                                <i class="bi bi-chevron-left"></i>
+                            </a>
+                            <a class="btn btn-outline-secondary"
+                               asp-action="Index" asp-route-mes="@(DateTime.Today.Month)" asp-route-anio="@(DateTime.Today.Year)">
+                                Hoy
+                            </a>
+                            <a class="btn btn-outline-secondary"
+                               asp-action="Index" asp-route-mes="@siguiente.Month" asp-route-anio="@siguiente.Year">
+                                <i class="bi bi-chevron-right"></i>
+                            </a>
+                        </div>
+                    </div>
+
+                    <div class="table-responsive">
+                        <table class="table table-bordered align-middle mb-0" style="table-layout: fixed;">
+                            <thead>
+                                <tr>
+                                    @foreach (var dia in diasSemana)
+                                    {
+                                        <th class="text-center small text-muted">@dia</th>
+                                    }
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var semana in Model.Semanas)
+                                {
+                                    <tr>
+                                        @foreach (var dia in semana)
+                                        {
+                                            var delMes = dia.Month == Model.Mes && dia.Year == Model.Anio;
+                                            var esHoy = dia.Date == DateTime.Today;
+                                            var eventosDia = Model.Eventos
+                                                .Where(e => e.Fecha.Date == dia.Date)
+                                                .OrderBy(e => e.Hora)
+                                                .ToList();
+
+                                            <td class="@(delMes ? "" : "bg-light")"
+                                                style="height: 105px; vertical-align: top; padding: 6px;">
+                                                <div class="mb-1">
+                                                    @if (esHoy)
+                                                    {
+                                                        <span class="badge bg-primary">@dia.Day</span>
+                                                    }
+                                                    else
+                                                    {
+                                                        <span class="small @(delMes ? "text-dark" : "text-muted")">@dia.Day</span>
+                                                    }
+                                                </div>
+
+                                                @foreach (var evento in eventosDia.Take(3))
+                                                {
+                                                    <a class="d-block text-decoration-none text-truncate small mb-1"
+                                                       asp-action="Editar" asp-route-id="@evento.Id"
+                                                       title="@evento.Hora - @evento.Titulo">
+                                                        <span class="badge bg-info text-dark">@evento.Hora</span>
+                                                        @evento.Titulo
+                                                    </a>
+                                                }
+
+                                                @if (eventosDia.Count > 3)
+                                                {
+                                                    <span class="small text-muted">+@(eventosDia.Count - 3) mas</span>
+                                                }
+                                            </td>
+                                        }
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-body pt-3">
+                    <h5 class="card-title">Eventos de @Model.NombreMes</h5>
+
+                    @if (!Model.Eventos.Any())
+                    {
+                        <p class="text-muted mb-0">No hay eventos registrados en este mes.</p>
+                    }
+                    else
+                    {
+                        <div class="list-group">
+                            @foreach (var evento in Model.Eventos)
+                            {
+                                <div class="list-group-item d-flex flex-wrap justify-content-between align-items-center gap-2">
+                                    <div>
+                                        <div class="fw-semibold">@evento.Titulo</div>
+                                        <div class="small text-muted">
+                                            <i class="bi bi-calendar"></i> @evento.Fecha.ToString("dd/MM/yyyy")
+                                            &middot;
+                                            <i class="bi bi-clock"></i> @evento.Hora
+                                            @if (evento.RecordatorioMin > 0)
+                                            {
+                                                <span>&middot; <i class="bi bi-bell"></i> @evento.RecordatorioMin min antes</span>
+                                            }
+                                        </div>
+                                        @if (!string.IsNullOrWhiteSpace(evento.Descripcion))
+                                        {
+                                            <div class="small text-muted mt-1">@evento.Descripcion</div>
+                                        }
+                                    </div>
+                                    <div class="d-flex gap-1">
+                                        <a class="btn btn-sm btn-outline-primary"
+                                           asp-action="Editar" asp-route-id="@evento.Id">
+                                            <i class="bi bi-pencil"></i>
+                                        </a>
+                                        <form asp-action="Eliminar" method="post" class="m-0">
+                                            @Html.AntiForgeryToken()
+                                            <input type="hidden" name="id" value="@evento.Id" />
+                                            <input type="hidden" name="mes" value="@Model.Mes" />
+                                            <input type="hidden" name="anio" value="@Model.Anio" />
+                                            <button class="btn btn-sm btn-outline-danger" type="submit">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        </form>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    }
+                </div>
+            </div>
+
+        </div>
+
+        <div class="col-lg-4">
+
+            <div class="card">
+                <div class="card-body pt-3">
+                    <h5 class="card-title">Nuevo evento</h5>
+
+                    <form asp-action="Crear" method="post">
+                        @Html.AntiForgeryToken()
+
+                        <div class="mb-3">
+                            <label class="form-label">Titulo</label>
+                            <input name="Titulo" class="form-control" maxlength="100" required
+                                   placeholder="Ej: Parcial de programacion" />
+                        </div>
+
+                        <div class="row g-2 mb-3">
+                            <div class="col-7">
+                                <label class="form-label">Fecha</label>
+                                <input name="Fecha" type="date" class="form-control"
+                                       value="@DateTime.Today.ToString("yyyy-MM-dd")" required />
+                            </div>
+                            <div class="col-5">
+                                <label class="form-label">Hora</label>
+                                <input name="Hora" type="time" class="form-control" value="09:00" required />
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Recordatorio</label>
+                            <select name="RecordatorioMin" class="form-select">
+                                <option value="0">Sin recordatorio</option>
+                                <option value="15">15 minutos antes</option>
+                                <option value="30">30 minutos antes</option>
+                                <option value="60">1 hora antes</option>
+                                <option value="1440">1 dia antes</option>
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Descripcion</label>
+                            <textarea name="Descripcion" class="form-control" rows="3"
+                                      placeholder="Detalles del evento..."></textarea>
+                        </div>
+
+                        <button class="btn btn-primary w-100" type="submit">
+                            <i class="bi bi-calendar-plus"></i> Agregar evento
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-body pt-3">
+                    <h5 class="card-title">Leyenda</h5>
+                    <p class="small mb-1"><span class="badge bg-info text-dark">Hora</span> Evento del dia</p>
+                    <p class="small mb-1"><span class="badge bg-primary">Dia</span> Hoy</p>
+                    <p class="small mb-0 text-muted">
+                        Pulsa un evento del calendario para editarlo o eliminarlo.
+                    </p>
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+</section>

@@ -1,0 +1,121 @@
+@model List<Tarea>
+@{
+    ViewData["Title"] = "Lista de tareas";
+    var pendientes = Model.Count(t => !t.Completada);
+    var completadas = Model.Count - pendientes;
+}
+
+<div class="pagetitle">
+    <h1>Lista de tareas</h1>
+    <nav>
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Inicio</a></li>
+            <li class="breadcrumb-item active">Tareas</li>
+        </ol>
+    </nav>
+</div>
+
+<section class="section">
+    <div class="row">
+
+        <div class="col-lg-8">
+
+            <div class="card">
+                <div class="card-body pt-3">
+                    <h5 class="card-title">Agregar tarea</h5>
+                    <form asp-action="Agregar" method="post" class="row g-2">
+                        @Html.AntiForgeryToken()
+                        <div class="col-md-9">
+                            <input name="titulo" class="form-control" maxlength="120" required
+                                   placeholder="Ej: Terminar el taller de MVC" />
+                        </div>
+                        <div class="col-md-3">
+                            <button class="btn btn-primary w-100" type="submit">
+                                <i class="bi bi-plus-lg"></i> Agregar
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-body pt-3">
+
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 class="card-title m-0">Tareas (@Model.Count)</h5>
+                        @if (completadas > 0)
+                        {
+                            <form asp-action="LimpiarCompletadas" method="post" class="m-0">
+                                @Html.AntiForgeryToken()
+                                <button class="btn btn-sm btn-outline-secondary" type="submit">
+                                    Quitar completadas (@completadas)
+                                </button>
+                            </form>
+                        }
+                    </div>
+
+                    @if (!Model.Any())
+                    {
+                        <p class="text-muted mb-0">Todavia no hay tareas. Agrega la primera arriba.</p>
+                    }
+                    else
+                    {
+                        <ul class="list-group">
+                            @foreach (var tarea in Model)
+                            {
+                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                    <div class="d-flex align-items-center gap-2">
+                                        <form asp-action="Alternar" method="post" class="m-0">
+                                            @Html.AntiForgeryToken()
+                                            <input type="hidden" name="id" value="@tarea.Id" />
+                                            <button type="submit"
+                                                    class="btn btn-sm @(tarea.Completada ? "btn-success" : "btn-outline-success")"
+                                                    title="Cambiar estado">
+                                                <i class="bi @(tarea.Completada ? "bi-check-circle-fill" : "bi-circle")"></i>
+                                            </button>
+                                        </form>
+                                        <span class="@(tarea.Completada ? "text-decoration-line-through text-muted" : "")">
+                                            @tarea.Titulo
+                                        </span>
+                                    </div>
+                                    <div class="d-flex align-items-center gap-2">
+                                        <small class="text-muted d-none d-sm-inline">@tarea.CreadaEn.ToString("dd/MM HH:mm")</small>
+                                        <form asp-action="Eliminar" method="post" class="m-0">
+                                            @Html.AntiForgeryToken()
+                                            <input type="hidden" name="id" value="@tarea.Id" />
+                                            <button type="submit" class="btn btn-sm btn-outline-danger" title="Eliminar">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        </form>
+                                    </div>
+                                </li>
+                            }
+                        </ul>
+                    }
+
+                </div>
+            </div>
+
+        </div>
+
+        <div class="col-lg-4">
+            <div class="card">
+                <div class="card-body pt-3">
+                    <h5 class="card-title">Resumen</h5>
+                    <p class="mb-2">Pendientes: <span class="badge bg-warning text-dark">@pendientes</span></p>
+                    <p class="mb-0">Completadas: <span class="badge bg-success">@completadas</span></p>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-body pt-3">
+                    <h5 class="card-title">Como funciona</h5>
+                    <p class="text-muted small mb-0">
+                        El controlador <code>TareasController</code> atiende las acciones y el modelo
+                        <code>Tarea</code> guarda los datos. Las vistas solo se encargan de mostrar.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</section>

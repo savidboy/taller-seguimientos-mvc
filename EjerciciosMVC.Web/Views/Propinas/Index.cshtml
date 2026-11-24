@@ -1,0 +1,135 @@
+@model PropinaViewModel
+@{
+    ViewData["Title"] = "Calculadora de propinas";
+    var porcentajes = new[] { 0, 5, 10, 15, 20 };
+    var cop = new CultureInfo("es-CO");
+    string dinero(decimal valor) => valor.ToString("N2", cop);
+}
+
+<div class="pagetitle">
+    <h1>Calculadora de propinas</h1>
+    <nav>
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Inicio</a></li>
+            <li class="breadcrumb-item active">Propinas</li>
+        </ol>
+    </nav>
+</div>
+
+<section class="section">
+    <div class="row">
+
+        <div class="col-lg-5">
+            <div class="card">
+                <div class="card-body pt-3">
+                    <h5 class="card-title">Datos de la cuenta</h5>
+
+                    <form asp-action="Calcular" method="post">
+                        @Html.AntiForgeryToken()
+
+                        <div class="mb-3">
+                            <label class="form-label">Monto de la cuenta</label>
+                            <div class="input-group">
+                                <span class="input-group-text">$</span>
+                                <input name="Monto" type="number" step="1" min="1" required
+                                       class="form-control"
+                                       value="@(Model.Monto > 0 ? Model.Monto.ToString("0.##", CultureInfo.InvariantCulture) : "")" />
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Porcentaje de propina</label>
+                            <select name="Porcentaje" class="form-select">
+                                @foreach (var p in porcentajes)
+                                {
+                                    <option value="@p" selected="@(Model.Porcentaje == p)">@p %</option>
+                                }
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Personas en la mesa</label>
+                            <input name="Personas" type="number" min="1" max="100" class="form-control"
+                                   value="@Model.Personas" />
+                        </div>
+
+                        <button type="submit" class="btn btn-primary w-100">
+                            <i class="bi bi-calculator"></i> Calcular
+                        </button>
+                    </form>
+
+                    @if (!ViewData.ModelState.IsValid)
+                    {
+                        <div class="alert alert-danger mt-3 mb-0">
+                            @foreach (var error in ViewData.ModelState.Values.SelectMany(v => v.Errors))
+                            {
+                                <div>@error.ErrorMessage</div>
+                            }
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-7">
+            @if (Model.Calculado)
+            {
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="card info-card">
+                            <div class="card-body">
+                                <h6 class="text-muted">Propina</h6>
+                                <h3 class="text-primary">$@dinero(Model.Propina)</h3>
+                                <small class="text-muted">@Model.Porcentaje % del total</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card info-card">
+                            <div class="card-body">
+                                <h6 class="text-muted">Total a pagar</h6>
+                                <h3 class="text-success">$@dinero(Model.Total)</h3>
+                                <small class="text-muted">Cuenta + propina</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card info-card">
+                            <div class="card-body">
+                                <h6 class="text-muted">Por persona</h6>
+                                <h3 class="text-dark">$@dinero(Model.PorPersona)</h3>
+                                <small class="text-muted">Entre @Model.Personas persona(s)</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+            else
+            {
+                <div class="card">
+                    <div class="card-body pt-3">
+                        <h5 class="card-title">Resultado</h5>
+                        <p class="text-muted mb-0">
+                            Escribe el monto y el porcentaje, y pulsa <strong>Calcular</strong>.
+                        </p>
+                    </div>
+                </div>
+            }
+
+            <div class="card">
+                <div class="card-body pt-3">
+                    <h5 class="card-title">Detalle del calculo</h5>
+                    <table class="table table-sm mb-0">
+                        <tbody>
+                            <tr><th>Cuenta</th><td class="text-end">$@dinero(Model.Monto)</td></tr>
+                            <tr><th>Propina (@Model.Porcentaje %)</th><td class="text-end">$@dinero(Model.Propina)</td></tr>
+                            <tr class="fw-bold"><th>Total</th><td class="text-end">$@dinero(Model.Total)</td></tr>
+                            <tr><th>Personas</th><td class="text-end">@Model.Personas</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</section>

@@ -1,0 +1,238 @@
+@model List<RegistroCronometro>
+@{
+    ViewData["Title"] = "Cronometro online";
+}
+
+<div class="pagetitle">
+    <h1>Cronometro online</h1>
+    <nav>
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Inicio</a></li>
+            <li class="breadcrumb-item active">Cronometro</li>
+        </ol>
+    </nav>
+</div>
+
+<section class="section">
+    <div class="row">
+
+        <div class="col-lg-7">
+
+            <div class="card">
+                <div class="card-body pt-3 text-center">
+
+                    <div class="display-3 font-monospace fw-bold my-3" id="reloj">00:00.00</div>
+
+                    <div class="d-flex flex-wrap justify-content-center gap-2 mb-4">
+                        <button class="btn btn-primary" type="button" id="botonIniciar">
+                            <i class="bi bi-play-fill"></i> Iniciar
+                        </button>
+                        <button class="btn btn-outline-primary" type="button" id="botonVuelta">
+                            <i class="bi bi-flag"></i> Vuelta
+                        </button>
+                        <button class="btn btn-outline-secondary" type="button" id="botonReiniciar">
+                            <i class="bi bi-arrow-counterclockwise"></i> Reiniciar
+                        </button>
+                        <button class="btn btn-success" type="button" id="botonGuardar">
+                            <i class="bi bi-save"></i> Guardar sesion
+                        </button>
+                    </div>
+
+                    <form asp-action="Guardar" method="post" id="formGuardar" class="row g-2 justify-content-center">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="tiempo" id="tiempoGuardar" value="00:00.00" />
+                        <input type="hidden" name="vueltas" id="vueltasGuardar" value="0" />
+                        <div class="col-sm-7">
+                            <input name="nombre" class="form-control" maxlength="60"
+                                   placeholder="Nombre de la sesion (opcional)" />
+                        </div>
+                        <div class="col-sm-auto">
+                            <span class="text-muted small">
+                                Vueltas: <strong id="contadorVueltas">0</strong>
+                            </span>
+                        </div>
+                    </form>
+
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-body pt-3">
+                    <h5 class="card-title">Vueltas de la sesion</h5>
+                    <ul class="list-group list-group-flush" id="listaVueltas"></ul>
+                    <p class="text-muted small mb-0" id="sinVueltas">
+                        Todavia no has registrado vueltas.
+                    </p>
+                </div>
+            </div>
+
+        </div>
+
+        <div class="col-lg-5">
+
+            <div class="card">
+                <div class="card-body pt-3">
+                    <h5 class="card-title">Sesiones guardadas</h5>
+
+                    @if (!Model.Any())
+                    {
+                        <p class="text-muted small mb-0">No hay sesiones guardadas.</p>
+                    }
+                    else
+                    {
+                        <div class="table-responsive">
+                            <table class="table table-sm align-middle mb-0">
+                                <thead>
+                                    <tr>
+                                        <th>Nombre</th>
+                                        <th class="text-end">Tiempo</th>
+                                        <th class="text-end">Vueltas</th>
+                                        <th class="text-end">Fecha</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var registro in Model)
+                                    {
+                                        <tr>
+                                            <td>@registro.Nombre</td>
+                                            <td class="text-end font-monospace">@registro.Tiempo</td>
+                                            <td class="text-end">@registro.Vueltas</td>
+                                            <td class="text-end small text-muted">@registro.Fecha.ToString("dd/MM HH:mm")</td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-body pt-3">
+                    <h5 class="card-title">Atajos</h5>
+                    <ul class="small text-muted mb-0">
+                        <li><strong>Iniciar / Pausar:</strong> controla el tiempo.</li>
+                        <li><strong>Vuelta:</strong> guarda un parcial sin detener el reloj.</li>
+                        <li><strong>Reiniciar:</strong> vuelve a cero y borra las vueltas.</li>
+                        <li><strong>Guardar sesion:</strong> envia el tiempo al servidor.</li>
+                    </ul>
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+</section>
+
+@section Scripts {
+    <script>
+        const reloj = document.getElementById('reloj');
+        const botonIniciar = document.getElementById('botonIniciar');
+        const listaVueltas = document.getElementById('listaVueltas');
+        const sinVueltas = document.getElementById('sinVueltas');
+
+        let inicio = 0;
+        let acumulado = 0;
+        let corriendo = false;
+        let marco = null;
+        let vueltas = [];
+
+        function transcurrido() {
+            return acumulado + (corriendo ? performance.now() - inicio : 0);
+        }
+
+        function formatear(ms) {
+            const centesimasTotales = Math.floor(ms / 10);
+            const cs = centesimasTotales % 100;
+            const totalSegundos = Math.floor(centesimasTotales / 100);
+            const s = totalSegundos % 60;
+            const m = Math.floor(totalSegundos / 60) % 60;
+            const h = Math.floor(totalSegundos / 3600);
+
+            const dos = (n) => String(n).padStart(2, '0');
+            return h > 0
+                ? dos(h) + ':' + dos(m) + ':' + dos(s) + '.' + dos(cs)
+                : dos(m) + ':' + dos(s) + '.' + dos(cs);
+        }
+
+        function pintar() {
+            reloj.textContent = formatear(transcurrido());
+            if (corriendo) {
+                marco = requestAnimationFrame(pintar);
+            }
+        }
+
+        function iniciar() {
+            if (corriendo) return;
+            corriendo = true;
+            inicio = performance.now();
+            botonIniciar.innerHTML = '<i class="bi bi-pause-fill"></i> Pausar';
+            marco = requestAnimationFrame(pintar);
+        }
+
+        function pausar() {
+            if (!corriendo) return;
+            acumulado += performance.now() - inicio;
+            corriendo = false;
+            cancelAnimationFrame(marco);
+            botonIniciar.innerHTML = '<i class="bi bi-play-fill"></i> Continuar';
+            pintar();
+        }
+
+        botonIniciar.addEventListener('click', function () {
+            if (corriendo) {
+                pausar();
+            } else {
+                iniciar();
+            }
+        });
+
+        document.getElementById('botonVuelta').addEventListener('click', function () {
+            if (transcurrido() <= 0) return;
+            vueltas.push(transcurrido());
+            pintarVueltas();
+        });
+
+        function pintarVueltas() {
+            listaVueltas.innerHTML = '';
+            sinVueltas.classList.toggle('d-none', vueltas.length > 0);
+
+            vueltas.forEach(function (ms, indice) {
+                const anterior = indice === 0 ? 0 : vueltas[indice - 1];
+                const elemento = document.createElement('li');
+                elemento.className = 'list-group-item d-flex justify-content-between align-items-center px-0';
+                elemento.innerHTML =
+                    '<span>Vuelta ' + (indice + 1) + '</span>' +
+                    '<span class="font-monospace">' + formatear(ms) +
+                    ' <small class="text-muted">(+' + formatear(ms - anterior) + ')</small></span>';
+                listaVueltas.appendChild(elemento);
+            });
+
+            document.getElementById('contadorVueltas').textContent = vueltas.length;
+        }
+
+        document.getElementById('botonReiniciar').addEventListener('click', function () {
+            if (corriendo) {
+                cancelAnimationFrame(marco);
+            }
+            corriendo = false;
+            acumulado = 0;
+            vueltas = [];
+            botonIniciar.innerHTML = '<i class="bi bi-play-fill"></i> Iniciar';
+            reloj.textContent = '00:00.00';
+            pintarVueltas();
+        });
+
+        document.getElementById('botonGuardar').addEventListener('click', function () {
+            const ms = transcurrido();
+            if (ms <= 0) {
+                alert('Primero inicia el cronometro.');
+                return;
+            }
+
+            document.getElementById('tiempoGuardar').value = formatear(ms);
+            document.getElementById('vueltasGuardar').value = vueltas.length;
+            document.getElementById('formGuardar').requestSubmit();
+        });
+    </script>
+}

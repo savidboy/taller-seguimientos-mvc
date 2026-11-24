@@ -1,0 +1,72 @@
+@model Receta
+@{
+    ViewData["Title"] = "Publicar receta";
+    var tipos = new[] { "Desayuno", "Almuerzo", "Cena", "Postre", "Bebida", "Otro" };
+}
+
+<div class="pagetitle">
+    <h1>Publicar receta</h1>
+    <nav>
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Inicio</a></li>
+            <li class="breadcrumb-item"><a asp-action="Index">Recetas</a></li>
+            <li class="breadcrumb-item active">Publicar</li>
+        </ol>
+    </nav>
+</div>
+
+<section class="section">
+    <div class="row">
+        <div class="col-lg-8">
+
+            <div class="card">
+                <div class="card-body pt-3">
+                    <h5 class="card-title">Datos de la receta</h5>
+
+                    <form asp-action="Crear" method="post">
+                        @Html.AntiForgeryToken()
+
+                        <div class="row g-3">
+                            <div class="col-md-8">
+                                <label class="form-label">Nombre de la receta</label>
+                                <input name="Nombre" class="form-control" maxlength="100" required
+                                       value="@Model.Nombre" placeholder="Ej: Arroz con pollo" />
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">Tipo de comida</label>
+                                <select name="TipoComida" class="form-select">
+                                    @foreach (var tipo in tipos)
+                                    {
+                                        <option value="@tipo" selected="@(Model.TipoComida == tipo)">@tipo</option>
+                                    }
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Autor</label>
+                                <input name="Autor" class="form-control" maxlength="60"
+                                       value="@Model.Autor" placeholder="Tu nombre" />
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label">Ingredientes (uno por linea)</label>
+                                <textarea name="Ingredientes" class="form-control" rows="5" required
+                                          placeholder="2 tazas de arroz&#10;1 pechuga de pollo&#10;sal al gusto">@Model.Ingredientes</textarea>
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label">Pasos de preparacion</label>
+                                <textarea name="Pasos" class="form-control" rows="6"
+                                          placeholder="1. Cocinar el arroz...&#10;2. Sofreir el pollo...">@Model.Pasos</textarea>
+                            </div>
+                            <div class="col-12 d-flex gap-2">
+                                <button class="btn btn-primary" type="submit">
+                                    <i class="bi bi-upload"></i> Publicar receta
+                                </button>
+                                <a class="btn btn-outline-secondary" asp-action="Index">Cancelar</a>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</section>

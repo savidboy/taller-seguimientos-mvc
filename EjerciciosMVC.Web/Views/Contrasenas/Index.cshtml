@@ -1,0 +1,137 @@
+@model ContrasenaViewModel
+@{
+    ViewData["Title"] = "Contrasenas seguras";
+    var colorNivel = Model.Nivel == "Debil" ? "danger"
+        : Model.Nivel == "Aceptable" ? "warning"
+        : Model.Nivel == "Fuerte" ? "success" : "primary";
+}
+
+<div class="pagetitle">
+    <h1>Generador de contrasenas seguras</h1>
+    <nav>
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Inicio</a></li>
+            <li class="breadcrumb-item active">Contrasenas</li>
+        </ol>
+    </nav>
+</div>
+
+<section class="section">
+    <div class="row">
+
+        <div class="col-lg-5">
+            <div class="card">
+                <div class="card-body pt-3">
+                    <h5 class="card-title">Opciones</h5>
+
+                    <form asp-action="Generar" method="post">
+                        @Html.AntiForgeryToken()
+
+                        <div class="mb-3">
+                            <label class="form-label d-flex justify-content-between">
+                                <span>Longitud</span>
+                                <strong id="valorLongitud">@Model.Longitud</strong>
+                            </label>
+                            <input name="Longitud" id="longitud" type="range" min="4" max="64"
+                                   value="@Model.Longitud" class="form-range"
+                                   oninput="document.getElementById('valorLongitud').textContent = this.value" />
+                        </div>
+
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="checkbox" name="Mayusculas" value="true"
+                                   id="mayusculas" checked="@Model.Mayusculas" />
+                            <label class="form-check-label" for="mayusculas">Mayusculas (A-Z)</label>
+                        </div>
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="checkbox" name="Minusculas" value="true"
+                                   id="minusculas" checked="@Model.Minusculas" />
+                            <label class="form-check-label" for="minusculas">Minusculas (a-z)</label>
+                        </div>
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="checkbox" name="Numeros" value="true"
+                                   id="numeros" checked="@Model.Numeros" />
+                            <label class="form-check-label" for="numeros">Numeros (0-9)</label>
+                        </div>
+                        <div class="form-check mb-3">
+                            <input class="form-check-input" type="checkbox" name="Simbolos" value="true"
+                                   id="simbolos" checked="@Model.Simbolos" />
+                            <label class="form-check-label" for="simbolos">Simbolos (!@@#$...)</label>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary w-100">
+                            <i class="bi bi-shuffle"></i> Generar contrasena
+                        </button>
+                    </form>
+
+                    @if (!ViewData.ModelState.IsValid)
+                    {
+                        <div class="alert alert-danger mt-3 mb-0">
+                            @foreach (var error in ViewData.ModelState.Values.SelectMany(v => v.Errors))
+                            {
+                                <div>@error.ErrorMessage</div>
+                            }
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-7">
+            <div class="card">
+                <div class="card-body pt-3">
+                    <h5 class="card-title">Resultado</h5>
+
+                    @if (string.IsNullOrEmpty(Model.Resultado))
+                    {
+                        <p class="text-muted mb-0">Configura las opciones y pulsa <strong>Generar contrasena</strong>.</p>
+                    }
+                    else
+                    {
+                        <div class="input-group mb-3">
+                            <input id="resultado" type="text" readonly class="form-control font-monospace fs-5"
+                                   value="@Model.Resultado" />
+                            <button class="btn btn-outline-primary" type="button" onclick="copiar(this)">
+                                <i class="bi bi-clipboard"></i> Copiar
+                            </button>
+                        </div>
+
+                        <p class="mb-1">
+                            Nivel: <span class="badge bg-@colorNivel">@Model.Nivel</span>
+                        </p>
+                        <p class="text-muted small mb-0">
+                            Entropia aproximada: <strong>@Model.Entropia bits</strong>.
+                            Mientras mas alta, mas dificil de adivinar.
+                        </p>
+                    }
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-body pt-3">
+                    <h5 class="card-title">Consejos</h5>
+                    <ul class="small text-muted mb-0">
+                        <li>Usa al menos 12 caracteres.</li>
+                        <li>Una contrasena distinta por sitio.</li>
+                        <li>Guardalas en un gestor de contrasenas.</li>
+                        <li>Activa la verificacion en dos pasos.</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</section>
+
+@section Scripts {
+    <script>
+        function copiar(boton) {
+            const campo = document.getElementById('resultado');
+            if (!campo) return;
+            navigator.clipboard.writeText(campo.value);
+            boton.innerHTML = '<i class="bi bi-check2"></i> Copiada';
+            setTimeout(function () {
+                boton.innerHTML = '<i class="bi bi-clipboard"></i> Copiar';
+            }, 1500);
+        }
+    </script>
+}

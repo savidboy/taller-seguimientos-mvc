@@ -1,0 +1,16 @@
+﻿Taller Seguimientos
+Programación de Software
+Samuel David Arrieta Oñate
+
+Hice los 11 ejercicios en un solo proyecto de ASP.NET Core MVC, con la plantilla
+NiceAdmin que vimos en clase.
+
+Para abrirlo: doble clic en INICIAR.cmd, esperar a que cargue el navegador en
+http://localhost:5080 y listo. Para apagarlo, cerrar la ventana negra del servidor.
+
+Si el navegador no abre solo, entra a http://localhost:5080.
+
+Están todos: tareas, propinas, contraseñas, gastos, reservas, notas, calendario,
+recetas, memoria, encuestas y cronómetro. Cada uno tiene su controlador y sus vistas.
+Los modelos están en Models y AppStore.cs guarda los datos mientras el programa está
+abierto, así que al cerrarlo se reinician. No hay que configurar base de datos.

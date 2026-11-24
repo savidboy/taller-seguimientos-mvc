@@ -1,0 +1,289 @@
+@model MemoriaViewModel
+@{
+    ViewData["Title"] = "Juego de memoria";
+    var dificultades = new (string Clave, string Texto)[]
+    {
+        ("facil", "Facil - 12 cartas"),
+        ("medio", "Medio - 16 cartas"),
+        ("dificil", "Dificil - 20 cartas")
+    };
+    var totalParejas = System.Text.Json.JsonSerializer.Deserialize<string[]>(Model.EmojisJson)?.Length / 2 ?? 0;
+}
+
+<div class="pagetitle">
+    <h1>Juego de memoria</h1>
+    <nav>
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Inicio</a></li>
+            <li class="breadcrumb-item active">Memoria</li>
+        </ol>
+    </nav>
+</div>
+
+<section class="section">
+    <div class="row">
+
+        <div class="col-lg-8">
+
+            <div class="card">
+                <div class="card-body pt-3">
+
+                    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+                        <div class="btn-group btn-group-sm">
+                            @foreach (var nivel in dificultades)
+                            {
+                                <a class="btn @(Model.Dificultad == nivel.Clave ? "btn-primary" : "btn-outline-primary")"
+                                   asp-action="Index" asp-route-dificultad="@nivel.Clave">
+                                    @nivel.Texto
+                                </a>
+                            }
+                        </div>
+                        <a class="btn btn-sm btn-outline-secondary"
+                           asp-action="Index" asp-route-dificultad="@Model.Dificultad">
+                            <i class="bi bi-arrow-clockwise"></i> Reiniciar
+                        </a>
+                    </div>
+
+                    <div class="row text-center mb-3">
+                        <div class="col-4">
+                            <div class="small text-muted">Movimientos</div>
+                            <div class="fs-4 fw-bold" id="movimientos">0</div>
+                        </div>
+                        <div class="col-4">
+                            <div class="small text-muted">Parejas</div>
+                            <div class="fs-4 fw-bold">
+                                <span id="parejas">0</span>
+                                <span class="text-muted fs-6">/ @totalParejas</span>
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <div class="small text-muted">Tiempo</div>
+                            <div class="fs-4 fw-bold" id="reloj">0 s</div>
+                        </div>
+                    </div>
+
+                    <div id="tablero" class="mb-3"></div>
+
+                    <div id="panelGanador" class="alert alert-success d-none mb-0">
+                        <h5 class="alert-heading"><i class="bi bi-trophy"></i> Completaste el tablero</h5>
+                        <p class="mb-2">
+                            Lo lograste en <strong id="movimientosFinal">0</strong> movimientos
+                            y <strong id="tiempoFinal">0</strong>.
+                        </p>
+
+                        <form asp-action="GuardarPuntaje" method="post" id="formPuntaje" class="row g-2 align-items-end">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="movimientos" id="movimientosGuardar" value="0" />
+                            <input type="hidden" name="segundos" id="segundosGuardar" value="0" />
+                            <input type="hidden" name="dificultad" value="@Model.Dificultad" />
+                            <div class="col-sm-7">
+                                <label class="form-label small mb-1">Tu nombre</label>
+                                <input name="nombre" id="nombre" class="form-control" maxlength="40" required
+                                       placeholder="Ej: Camila" />
+                            </div>
+                            <div class="col-sm-5">
+                                <button class="btn btn-success w-100" type="submit">
+                                    <i class="bi bi-save"></i> Guardar puntaje
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+
+                </div>
+            </div>
+
+        </div>
+
+        <div class="col-lg-4">
+
+            <div class="card">
+                <div class="card-body pt-3">
+                    <h5 class="card-title">Mejores puntajes (@Model.Dificultad)</h5>
+
+                    @if (!Model.Puntajes.Any())
+                    {
+                        <p class="text-muted small mb-0">Todavia no hay puntajes en esta dificultad.</p>
+                    }
+                    else
+                    {
+                        <div class="table-responsive">
+                            <table class="table table-sm align-middle mb-0">
+                                <thead>
+                                    <tr>
+                                        <th>#</th>
+                                        <th>Jugador</th>
+                                        <th class="text-end">Mov.</th>
+                                        <th class="text-end">Tiempo</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @{ var puesto = 1; }
+                                    @foreach (var puntaje in Model.Puntajes)
+                                    {
+                                        <tr>
+                                            <td class="text-muted">@puesto</td>
+                                            <td>@puntaje.Nombre</td>
+                                            <td class="text-end">@puntaje.Movimientos</td>
+                                            <td class="text-end">@puntaje.Segundos s</td>
+                                        </tr>
+                                        puesto++;
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-body pt-3">
+                    <h5 class="card-title">Como jugar</h5>
+                    <ul class="small text-muted mb-0">
+                        <li>Voltea dos cartas por turno.</li>
+                        <li>Si tienen el mismo emoji, quedan destapadas.</li>
+                        <li>Encuentra todas las parejas en el menor numero de movimientos.</li>
+                        <li>El tiempo empieza con el primer clic.</li>
+                    </ul>
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+</section>
+
+@section Styles {
+    <style>
+        #tablero {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 10px;
+        }
+
+        .memoria-carta {
+            aspect-ratio: 1 / 1;
+            font-size: 1.9rem;
+            line-height: 1;
+            border: 2px solid #d1d5db;
+            border-radius: 0.75rem;
+            background: #f8f9fa;
+            cursor: pointer;
+            transition: transform 0.15s ease, background 0.15s ease;
+        }
+
+        .memoria-carta:hover {
+            transform: translateY(-2px);
+        }
+
+        .memoria-carta.volteada {
+            background: #e7f1ff;
+            border-color: #0d6efd;
+        }
+
+        .memoria-carta.emparejada {
+            background: #d1e7dd;
+            border-color: #198754;
+            cursor: default;
+        }
+
+        @@media (max-width: 576px) {
+            #tablero { gap: 6px; }
+            .memoria-carta { font-size: 1.3rem; border-radius: 0.5rem; }
+        }
+    </style>
+}
+
+@section Scripts {
+    <script>
+        const emojis = @Html.Raw(Model.EmojisJson);
+        const dificultad = '@Model.Dificultad';
+
+        const tablero = document.getElementById('tablero');
+        const panelGanador = document.getElementById('panelGanador');
+        const totalParejas = emojis.length / 2;
+
+        let primera = null;
+        let segunda = null;
+        let bloqueado = false;
+        let movimientos = 0;
+        let parejas = 0;
+        let segundos = 0;
+        let intervalo = null;
+        let iniciado = false;
+
+        emojis.forEach((emoji) => {
+            const carta = document.createElement('button');
+            carta.type = 'button';
+            carta.className = 'memoria-carta';
+            carta.dataset.emoji = emoji;
+            carta.textContent = '?';
+            carta.setAttribute('aria-label', 'Carta oculta');
+            carta.addEventListener('click', () => voltear(carta));
+            tablero.appendChild(carta);
+        });
+
+        function iniciarReloj() {
+            if (iniciado) return;
+            iniciado = true;
+            intervalo = setInterval(() => {
+                segundos++;
+                document.getElementById('reloj').textContent = segundos + ' s';
+            }, 1000);
+        }
+
+        function voltear(carta) {
+            if (bloqueado) return;
+            if (carta.classList.contains('volteada') || carta.classList.contains('emparejada')) return;
+
+            iniciarReloj();
+            carta.classList.add('volteada');
+            carta.textContent = carta.dataset.emoji;
+            carta.setAttribute('aria-label', 'Carta ' + carta.dataset.emoji);
+
+            if (!primera) {
+                primera = carta;
+                return;
+            }
+
+            segunda = carta;
+            movimientos++;
+            document.getElementById('movimientos').textContent = movimientos;
+
+            if (primera.dataset.emoji === segunda.dataset.emoji) {
+                primera.classList.add('emparejada');
+                segunda.classList.add('emparejada');
+                parejas++;
+                document.getElementById('parejas').textContent = parejas;
+                primera = null;
+                segunda = null;
+
+                if (parejas === totalParejas) {
+                    ganar();
+                }
+            } else {
+                bloqueado = true;
+                setTimeout(() => {
+                    primera.classList.remove('volteada');
+                    segunda.classList.remove('volteada');
+                    primera.textContent = '?';
+                    segunda.textContent = '?';
+                    primera.setAttribute('aria-label', 'Carta oculta');
+                    segunda.setAttribute('aria-label', 'Carta oculta');
+                    primera = null;
+                    segunda = null;
+                    bloqueado = false;
+                }, 700);
+            }
+        }
+
+        function ganar() {
+            clearInterval(intervalo);
+            document.getElementById('movimientosFinal').textContent = movimientos;
+            document.getElementById('tiempoFinal').textContent = segundos + ' segundos';
+            document.getElementById('movimientosGuardar').value = movimientos;
+            document.getElementById('segundosGuardar').value = segundos;
+            panelGanador.classList.remove('d-none');
+            document.getElementById('nombre').focus();
+        }
+    </script>
+}

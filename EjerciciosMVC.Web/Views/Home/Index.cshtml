@@ -1,0 +1,60 @@
+﻿@{
+    ViewData["Title"] = "Inicio";
+
+    var ejercicios = new (string Numero, string Nombre, string Descripcion, string Controlador)[]
+    {
+        ("1", "Lista de tareas", "Agregar, eliminar y marcar tareas.", "Tareas"),
+        ("2", "Calculadora de propinas", "Calcular la propina y el total por persona.", "Propinas"),
+        ("3", "Contrasenas seguras", "Generar contrasenas con longitud y caracteres ajustables.", "Contrasenas"),
+        ("4", "Gestor de gastos", "Registrar gastos y ver el resumen del mes.", "Gastos"),
+        ("5", "Sistema de reservas", "Consultar horarios y confirmar reservas.", "Reservas"),
+        ("6", "Gestor de notas", "Crear, editar y buscar notas.", "Notas"),
+        ("7", "Calendario de eventos", "Agregar eventos y recordatorios.", "Calendario"),
+        ("8", "Plataforma de recetas", "Buscar, guardar y compartir recetas.", "Recetas"),
+        ("9", "Juego de memoria", "Encontrar parejas y guardar puntajes.", "Memoria"),
+        ("10", "Plataforma de encuestas", "Crear encuestas y ver los resultados.", "Encuestas"),
+        ("11", "Cronometro online", "Medir tiempos y guardar vueltas.", "Cronometro")
+    };
+}
+
+<div class="pagetitle">
+    <h1>Taller de arquitectura MVC</h1>
+    <p class="text-muted mb-0">Samuel David Arrieta Oñate &middot; Programación de Software</p>
+</div>
+
+<section class="section">
+    <div class="card">
+        <div class="card-body pt-3">
+
+            <p class="mb-3">
+                Los 11 ejercicios del taller estan aqui, cada uno con su modelo, sus vistas y su
+                controlador. Los datos se guardan en memoria y se reinician al cerrar el programa.
+            </p>
+
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead>
+                        <tr>
+                            <th style="width: 48px;">#</th>
+                            <th style="width: 280px;">Ejercicio</th>
+                            <th class="d-none d-md-table-cell">Descripcion</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var ejercicio in ejercicios)
+                        {
+                            <tr>
+                                <td class="text-muted">@ejercicio.Numero</td>
+                                <td>
+                                    <a asp-controller="@ejercicio.Controlador" asp-action="Index">@ejercicio.Nombre</a>
+                                </td>
+                                <td class="d-none d-md-table-cell text-muted small">@ejercicio.Descripcion</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+
+        </div>
+    </div>
+</section>

@@ -1,0 +1,91 @@
+@model Encuesta
+@{
+    ViewData["Title"] = "Resultados de la encuesta";
+    var total = Model.TotalVotos;
+}
+
+<div class="pagetitle">
+    <h1>Resultados</h1>
+    <nav>
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Inicio</a></li>
+            <li class="breadcrumb-item"><a asp-action="Index">Encuestas</a></li>
+            <li class="breadcrumb-item active">Resultados</li>
+        </ol>
+    </nav>
+</div>
+
+<section class="section">
+    <div class="row">
+        <div class="col-lg-8">
+
+            <div class="card">
+                <div class="card-body pt-3">
+                    <h5 class="card-title">@Model.Pregunta</h5>
+                    <p class="text-muted small">
+                        Total de votos: <strong>@total</strong> &middot;
+                        Creada el @Model.CreadaEn.ToString("dd/MM/yyyy HH:mm")
+                    </p>
+
+                    @if (total == 0)
+                    {
+                        <p class="text-muted mb-0">Esta encuesta aun no tiene votos.</p>
+                    }
+                    else
+                    {
+                        @foreach (var opcion in Model.Opciones)
+                        {
+                            var porcentaje = (double)opcion.Votos * 100 / total;
+                            <div class="mb-4">
+                                <div class="d-flex justify-content-between mb-1">
+                                    <span class="fw-semibold">@opcion.Texto</span>
+                                    <span class="text-muted small">
+                                        @opcion.Votos voto(s) &middot;
+                                        @porcentaje.ToString("F1", System.Globalization.CultureInfo.InvariantCulture) %
+                                    </span>
+                                </div>
+                                <div class="progress" style="height: 18px;">
+                                    <div class="progress-bar" role="progressbar"
+                                         style="width: @porcentaje.ToString("F1", System.Globalization.CultureInfo.InvariantCulture)%"
+                                         aria-valuenow="@opcion.Votos" aria-valuemin="0" aria-valuemax="@total">
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    }
+
+                    <div class="d-flex gap-2 mt-4">
+                        <a class="btn btn-outline-secondary" asp-action="Index">
+                            <i class="bi bi-arrow-left"></i> Volver a las encuestas
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-body pt-3">
+                    <h5 class="card-title">Votar de nuevo</h5>
+                    <form asp-action="Votar" method="post" class="row g-2 align-items-end">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="encuestaId" value="@Model.Id" />
+                        <div class="col-md-8">
+                            <label class="form-label small mb-1">Opcion</label>
+                            <select name="opcionId" class="form-select" required>
+                                @foreach (var opcion in Model.Opciones)
+                                {
+                                    <option value="@opcion.Id">@opcion.Texto</option>
+                                }
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <button class="btn btn-primary w-100" type="submit">
+                                <i class="bi bi-check2-circle"></i> Votar
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</section>

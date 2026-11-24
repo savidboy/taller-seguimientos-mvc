@@ -1,0 +1,97 @@
+@model Receta
+@{
+    ViewData["Title"] = Model.Nombre;
+}
+
+<div class="pagetitle">
+    <h1>@Model.Nombre</h1>
+    <nav>
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Inicio</a></li>
+            <li class="breadcrumb-item"><a asp-action="Index">Recetas</a></li>
+            <li class="breadcrumb-item active">@Model.Nombre</li>
+        </ol>
+    </nav>
+</div>
+
+<section class="section">
+    <div class="row">
+
+        <div class="col-lg-8">
+
+            <div class="card">
+                <div class="card-body pt-3">
+                    <div class="d-flex flex-wrap justify-content-between align-items-start gap-2">
+                        <div>
+                            <span class="badge bg-secondary mb-2">@Model.TipoComida</span>
+                            @if (Model.Compartida)
+                            {
+                                <span class="badge bg-info text-dark mb-2">Compartida</span>
+                            }
+                            <p class="small text-muted mb-0">
+                                <i class="bi bi-person"></i> @Model.Autor
+                                &middot;
+                                <i class="bi bi-clock"></i> Publicada el @Model.CreadaEn.ToString("dd/MM/yyyy")
+                            </p>
+                        </div>
+                        <div class="d-flex gap-1">
+                            <form asp-action="Guardar" method="post" class="m-0">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="id" value="@Model.Id" />
+                                <button class="btn btn-sm @(Model.Guardada ? "btn-success" : "btn-outline-success")" type="submit">
+                                    <i class="bi @(Model.Guardada ? "bi-bookmark-fill" : "bi-bookmark")"></i>
+                                    @(Model.Guardada ? "Guardada" : "Guardar")
+                                </button>
+                            </form>
+                            <form asp-action="Compartir" method="post" class="m-0">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="id" value="@Model.Id" />
+                                <button class="btn btn-sm btn-outline-info" type="submit">
+                                    <i class="bi bi-share"></i> Compartir
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+
+                    <hr />
+
+                    <h5>Ingredientes</h5>
+                    <p style="white-space: pre-line;" class="mb-4">@Model.Ingredientes</p>
+
+                    <h5>Preparacion</h5>
+                    <p style="white-space: pre-line;" class="mb-0">@Model.Pasos</p>
+                </div>
+            </div>
+
+        </div>
+
+        <div class="col-lg-4">
+
+            <div class="card">
+                <div class="card-body pt-3">
+                    <h5 class="card-title">Acciones</h5>
+                    <div class="d-grid gap-2">
+                        <a class="btn btn-outline-secondary" asp-action="Index">
+                            <i class="bi bi-arrow-left"></i> Volver a las recetas
+                        </a>
+                        <a class="btn btn-outline-primary" asp-action="Crear">
+                            <i class="bi bi-plus-lg"></i> Publicar otra receta
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-body pt-3">
+                    <h5 class="card-title">Sugerencia</h5>
+                    <p class="small text-muted mb-0">
+                        Al compartir una receta el sistema genera un enlace publico a esta pagina
+                        y lo muestra en el mensaje de confirmacion.
+                    </p>
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+</section>

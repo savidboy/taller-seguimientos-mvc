@@ -1,0 +1,217 @@
+@model GastosViewModel
+@using System.Globalization
+@{
+    ViewData["Title"] = "Gestor de gastos";
+    var cop = new CultureInfo("es-CO");
+    var nombreMes = new DateTime(Model.Anio, Model.Mes, 1).ToString("MMMM 'de' yyyy", cop);
+    var anterior = new DateTime(Model.Anio, Model.Mes, 1).AddMonths(-1);
+    var siguiente = new DateTime(Model.Anio, Model.Mes, 1).AddMonths(1);
+    var maximo = Model.PorCategoria.Count > 0 ? Model.PorCategoria.Values.Max() : 0m;
+    var promedio = Model.Gastos.Count > 0 ? Model.TotalMes / Model.Gastos.Count : 0m;
+}
+
+<div class="pagetitle">
+    <h1>Gestor de gastos personales</h1>
+    <nav>
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Inicio</a></li>
+            <li class="breadcrumb-item active">Gastos</li>
+        </ol>
+    </nav>
+</div>
+
+<section class="section">
+    <div class="row">
+
+        <div class="col-lg-7">
+
+            <div class="card">
+                <div class="card-body pt-3">
+                    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
+                        <h5 class="card-title m-0">Gastos de @nombreMes</h5>
+                        <div class="btn-group btn-group-sm">
+                            <a class="btn btn-outline-secondary"
+                               asp-action="Index"
+                               asp-route-mes="@anterior.Month"
+                               asp-route-anio="@anterior.Year"
+                               asp-route-categoria="@Model.CategoriaFiltro">
+                                <i class="bi bi-chevron-left"></i>
+                            </a>
+                            <a class="btn btn-outline-secondary"
+                               asp-action="Index"
+                               asp-route-mes="@(DateTime.Today.Month)"
+                               asp-route-anio="@(DateTime.Today.Year)">
+                                Hoy
+                            </a>
+                            <a class="btn btn-outline-secondary"
+                               asp-action="Index"
+                               asp-route-mes="@siguiente.Month"
+                               asp-route-anio="@siguiente.Year"
+                               asp-route-categoria="@Model.CategoriaFiltro">
+                                <i class="bi bi-chevron-right"></i>
+                            </a>
+                        </div>
+                    </div>
+
+                    <form asp-action="Index" method="get" class="row g-2 align-items-end mt-3">
+                        <input type="hidden" name="mes" value="@Model.Mes" />
+                        <input type="hidden" name="anio" value="@Model.Anio" />
+                        <div class="col-sm-8">
+                            <label class="form-label small mb-1">Filtrar por categoria</label>
+                            <select name="categoria" class="form-select form-select-sm">
+                                <option value="">Todas las categorias</option>
+                                @foreach (var categoria in Model.Categorias)
+                                {
+                                    <option value="@categoria" selected="@(Model.CategoriaFiltro == categoria)">@categoria</option>
+                                }
+                            </select>
+                        </div>
+                        <div class="col-sm-4">
+                            <button class="btn btn-sm btn-primary w-100" type="submit">
+                                <i class="bi bi-funnel"></i> Filtrar
+                            </button>
+                        </div>
+                    </form>
+
+                    <div class="table-responsive mt-3">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Fecha</th>
+                                    <th>Descripcion</th>
+                                    <th>Categoria</th>
+                                    <th class="text-end">Monto</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @if (!Model.Gastos.Any())
+                                {
+                                    <tr>
+                                        <td colspan="5" class="text-center text-muted py-4">
+                                            No hay gastos registrados en @nombreMes.
+                                        </td>
+                                    </tr>
+                                }
+                                @foreach (var gasto in Model.Gastos)
+                                {
+                                    <tr>
+                                        <td class="small text-muted">@gasto.Fecha.ToString("dd/MM/yyyy")</td>
+                                        <td>@gasto.Descripcion</td>
+                                        <td><span class="badge bg-secondary">@gasto.Categoria</span></td>
+                                        <td class="text-end fw-semibold">$@gasto.Monto.ToString("N0", cop)</td>
+                                        <td class="text-end">
+                                            <form asp-action="Eliminar" method="post" class="m-0">
+                                                @Html.AntiForgeryToken()
+                                                <input type="hidden" name="id" value="@gasto.Id" />
+                                                <input type="hidden" name="mes" value="@Model.Mes" />
+                                                <input type="hidden" name="anio" value="@Model.Anio" />
+                                                <button class="btn btn-sm btn-outline-danger" type="submit" title="Eliminar">
+                                                    <i class="bi bi-trash"></i>
+                                                </button>
+                                            </form>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+
+                </div>
+            </div>
+
+        </div>
+
+        <div class="col-lg-5">
+
+            <div class="card">
+                <div class="card-body pt-3">
+                    <h5 class="card-title">Registrar gasto</h5>
+
+                    <form asp-action="Agregar" method="post" class="row g-3">
+                        @Html.AntiForgeryToken()
+
+                        <div class="col-12">
+                            <label class="form-label">Descripcion</label>
+                            <input name="Descripcion" class="form-control" maxlength="120" required
+                                   placeholder="Ej: Almuerzo en la universidad" />
+                        </div>
+
+                        <div class="col-6">
+                            <label class="form-label">Monto</label>
+                            <div class="input-group">
+                                <span class="input-group-text">$</span>
+                                <input name="Monto" type="number" min="1" step="1" class="form-control" required />
+                            </div>
+                        </div>
+
+                        <div class="col-6">
+                            <label class="form-label">Fecha</label>
+                            <input name="Fecha" type="date" class="form-control"
+                                   value="@DateTime.Today.ToString("yyyy-MM-dd")" required />
+                        </div>
+
+                        <div class="col-12">
+                            <label class="form-label">Categoria</label>
+                            <select name="Categoria" class="form-select">
+                                @foreach (var categoria in Model.Categorias)
+                                {
+                                    <option value="@categoria">@categoria</option>
+                                }
+                            </select>
+                        </div>
+
+                        <div class="col-12">
+                            <button class="btn btn-primary w-100" type="submit">
+                                <i class="bi bi-plus-lg"></i> Agregar gasto
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-body pt-3">
+                    <h5 class="card-title">Resumen del mes</h5>
+
+                    <div class="row text-center mb-3">
+                        <div class="col-6">
+                            <h6 class="text-muted mb-1">Total</h6>
+                            <h4 class="text-primary mb-0">$@Model.TotalMes.ToString("N0", cop)</h4>
+                        </div>
+                        <div class="col-6">
+                            <h6 class="text-muted mb-1">Promedio</h6>
+                            <h4 class="text-dark mb-0">$@promedio.ToString("N0", cop)</h4>
+                        </div>
+                    </div>
+
+                    @if (Model.PorCategoria.Count == 0)
+                    {
+                        <p class="text-muted small mb-0">Aun no hay datos para graficar.</p>
+                    }
+                    else
+                    {
+                        @foreach (var grupo in Model.PorCategoria.OrderByDescending(g => g.Value))
+                        {
+                            var porcentaje = maximo == 0 ? 0 : (double)(grupo.Value / maximo * 100m);
+                            <div class="mb-3">
+                                <div class="d-flex justify-content-between small">
+                                    <span>@grupo.Key</span>
+                                    <span class="fw-semibold">$@grupo.Value.ToString("N0", cop)</span>
+                                </div>
+                                <div class="progress" style="height: 6px;">
+                                    <div class="progress-bar" role="progressbar"
+                                         style="width: @porcentaje.ToString("F0", CultureInfo.InvariantCulture)%"
+                                         aria-valuenow="@porcentaje.ToString("F0", CultureInfo.InvariantCulture)"
+                                         aria-valuemin="0" aria-valuemax="100"></div>
+                                </div>
+                            </div>
+                        }
+                    }
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+</section>

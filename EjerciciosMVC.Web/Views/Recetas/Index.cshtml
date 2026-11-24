@@ -1,0 +1,119 @@
+@model RecetasViewModel
+@{
+    ViewData["Title"] = "Plataforma de recetas";
+}
+
+<div class="pagetitle">
+    <h1>Plataforma de recetas</h1>
+    <nav>
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Inicio</a></li>
+            <li class="breadcrumb-item active">Recetas</li>
+        </ol>
+    </nav>
+</div>
+
+<section class="section">
+
+    <div class="card">
+        <div class="card-body pt-3">
+            <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+                <h5 class="card-title m-0">Buscar recetas</h5>
+                <a class="btn btn-primary btn-sm" asp-action="Crear">
+                    <i class="bi bi-plus-lg"></i> Publicar receta
+                </a>
+            </div>
+
+            <form asp-action="Index" method="get" class="row g-2 align-items-end">
+                <div class="col-md-5">
+                    <label class="form-label small mb-1">Nombre o ingrediente</label>
+                    <input name="q" class="form-control" value="@Model.Q" placeholder="Ej: pollo, papa..." />
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label small mb-1">Tipo de comida</label>
+                    <select name="tipo" class="form-select">
+                        <option value="">Todas</option>
+                        @foreach (var tipo in Model.Tipos)
+                        {
+                            <option value="@tipo" selected="@(Model.Tipo == tipo)">@tipo</option>
+                        }
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <div class="form-check mb-2">
+                        <input class="form-check-input" type="checkbox" name="soloGuardadas" value="true"
+                               id="soloGuardadas" checked="@Model.SoloGuardadas" />
+                        <label class="form-check-label" for="soloGuardadas">Solo guardadas</label>
+                    </div>
+                    <button class="btn btn-outline-primary btn-sm w-100" type="submit">
+                        <i class="bi bi-search"></i> Filtrar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    @if (!Model.Recetas.Any())
+    {
+        <div class="card">
+            <div class="card-body pt-3">
+                <p class="text-muted mb-0">No se encontraron recetas con esos filtros.</p>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="row">
+            @foreach (var receta in Model.Recetas)
+            {
+                <div class="col-md-6 col-xl-4">
+                    <div class="card h-100">
+                        <div class="card-body d-flex flex-column">
+                            <div class="d-flex justify-content-between align-items-start gap-2">
+                                <h5 class="card-title mb-1">@receta.Nombre</h5>
+                                <span class="badge bg-secondary">@receta.TipoComida</span>
+                            </div>
+
+                            <p class="small text-muted mb-2">
+                                <i class="bi bi-person"></i> @receta.Autor
+                                @if (receta.Compartida)
+                                {
+                                    <span class="badge bg-info text-dark ms-1">Compartida</span>
+                                }
+                            </p>
+
+                            <p class="small text-muted mb-2" style="white-space: pre-line; max-height: 72px; overflow: hidden;">
+                                @receta.Ingredientes
+                            </p>
+
+                            <div class="mt-auto d-flex flex-wrap gap-1">
+                                <a class="btn btn-sm btn-outline-primary"
+                                   asp-action="Detalle" asp-route-id="@receta.Id">
+                                    <i class="bi bi-eye"></i> Ver
+                                </a>
+
+                                <form asp-action="Guardar" method="post" class="m-0">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="id" value="@receta.Id" />
+                                    <button class="btn btn-sm @(receta.Guardada ? "btn-success" : "btn-outline-success")" type="submit">
+                                        <i class="bi @(receta.Guardada ? "bi-bookmark-fill" : "bi-bookmark")"></i>
+                                        @(receta.Guardada ? "Guardada" : "Guardar")
+                                    </button>
+                                </form>
+
+                                <form asp-action="Compartir" method="post" class="m-0">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="id" value="@receta.Id" />
+                                    <button class="btn btn-sm btn-outline-info" type="submit">
+                                        <i class="bi bi-share"></i> Compartir
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+
+</section>

@@ -1,0 +1,52 @@
+@{
+    ViewData["Title"] = "Nueva encuesta";
+}
+
+<div class="pagetitle">
+    <h1>Nueva encuesta</h1>
+    <nav>
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Inicio</a></li>
+            <li class="breadcrumb-item"><a asp-action="Index">Encuestas</a></li>
+            <li class="breadcrumb-item active">Nueva</li>
+        </ol>
+    </nav>
+</div>
+
+<section class="section">
+    <div class="row">
+        <div class="col-lg-7">
+
+            <div class="card">
+                <div class="card-body pt-3">
+                    <h5 class="card-title">Datos de la encuesta</h5>
+
+                    <form asp-action="Crear" method="post">
+                        @Html.AntiForgeryToken()
+
+                        <div class="mb-3">
+                            <label class="form-label">Pregunta</label>
+                            <input name="pregunta" class="form-control" maxlength="150" required
+                                   placeholder="Ej: ¿Cual es tu lenguaje favorito?" />
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Opciones (una por linea)</label>
+                            <textarea name="opciones" class="form-control" rows="6" required
+                                      placeholder="C#&#10;Python&#10;JavaScript&#10;Java"></textarea>
+                            <div class="form-text">Escribe al menos dos opciones.</div>
+                        </div>
+
+                        <div class="d-flex gap-2">
+                            <button class="btn btn-primary" type="submit">
+                                <i class="bi bi-plus-lg"></i> Crear encuesta
+                            </button>
+                            <a class="btn btn-outline-secondary" asp-action="Index">Cancelar</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</section>

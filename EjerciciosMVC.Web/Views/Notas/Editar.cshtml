@@ -1,0 +1,56 @@
+@model Nota
+@{
+    ViewData["Title"] = "Editar nota";
+}
+
+<div class="pagetitle">
+    <h1>Editar nota</h1>
+    <nav>
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Inicio</a></li>
+            <li class="breadcrumb-item"><a asp-action="Index">Notas</a></li>
+            <li class="breadcrumb-item active">Editar</li>
+        </ol>
+    </nav>
+</div>
+
+<section class="section">
+    <div class="row">
+        <div class="col-lg-8">
+
+            <div class="card">
+                <div class="card-body pt-3">
+                    <h5 class="card-title">Datos de la nota</h5>
+
+                    <form asp-action="Editar" method="post">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="Id" value="@Model.Id" />
+
+                        <div class="mb-3">
+                            <label class="form-label">Titulo</label>
+                            <input name="Titulo" class="form-control" maxlength="100" required value="@Model.Titulo" />
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Categoria</label>
+                            <input name="Categoria" class="form-control" maxlength="40" value="@Model.Categoria" />
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Contenido</label>
+                            <textarea name="Contenido" class="form-control" rows="8" required>@Model.Contenido</textarea>
+                        </div>
+
+                        <div class="d-flex gap-2">
+                            <button class="btn btn-primary" type="submit">
+                                <i class="bi bi-save"></i> Guardar cambios
+                            </button>
+                            <a class="btn btn-outline-secondary" asp-action="Index">Cancelar</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</section>
