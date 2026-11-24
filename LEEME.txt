@@ -1,6 +1,7 @@
 ﻿Taller Seguimientos
 Programación de Software
 Samuel David Arrieta Oñate
+https://github.com/savidboy/taller-seguimientos-mvc
 
 Hice los 11 ejercicios en un solo proyecto de ASP.NET Core MVC, con la plantilla
 NiceAdmin que vimos en clase.
